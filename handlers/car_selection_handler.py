@@ -5,15 +5,30 @@ from data.models import UserState
 from data.user import update_user
 from utils.api import get_search_filed, search_recent_car_posts
 from utils.tranformers import create_car_post, filter_search_response
+import os
+import logging
+
+logger = logging.getLogger('logger')
 
 def car_selection_handler(bot: TeleBot):
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('manufacturer_'))
     def select_manufacturer(call: CallbackQuery):
         manufacturer = call.data.split('_')[1]
-        update_user(call.message.chat.id, user_state=UserState.MODEL.value, manufacturer=manufacturer)
 
-        models = get_search_filed('model', { 'manufacturer': manufacturer })
+        try:
+            update_user(call.message.chat.id, user_state=UserState.MODEL.value, manufacturer=manufacturer)
+        except Exception as e:
+            logger.error(e)
+            bot.send_message(call.message.chat.id, "Error occurred while updating user")
+            return
+
+        try:
+            models = get_search_filed('model', { 'manufacturer': manufacturer })
+        except Exception as e:
+            logger.error(e)
+            bot.send_message(call.message.chat.id, "Error occurred while fetching models")
+            return
 
         markup = InlineKeyboardMarkup()
         markup.row_width = 2
@@ -25,9 +40,21 @@ def car_selection_handler(bot: TeleBot):
     @bot.callback_query_handler(func=lambda call: call.data.startswith('model_'))
     def select_model(call: CallbackQuery):
         model = call.data.split('_')[1]
-        user = update_user(call.message.chat.id, user_state=UserState.YEAR.value, model=model)
 
-        year = get_search_filed('year', { 'manufacturer': user['manufacturer'], 'model': model })
+        try:
+            user = update_user(call.message.chat.id, user_state=UserState.YEAR.value, model=model)
+        except Exception as e:
+            logger.error(e)
+            bot.send_message(call.message.chat.id, "Error occurred while updating user")
+            return
+
+        try:
+            year = get_search_filed('year', { 'manufacturer': user['manufacturer'], 'model': model })
+        except Exception as e:
+            logger.error(e)
+            bot.send_message(call.message.chat.id, "Error occurred while fetching years")
+            return
+        
         min_year = year['from']
         max_year = year['to']
 
@@ -35,11 +62,23 @@ def car_selection_handler(bot: TeleBot):
 
     @bot.message_handler(func=lambda message: message.text and message.text.count('-') == 1 and message.text.replace('-', '').isdigit())
     def select_year(message: Message):
-        user = update_user(message.chat.id, year=message.text)
+        try:
+            user = update_user(message.chat.id, year=message.text)
+        except Exception as e:
+            logger.error(e)
+            bot.send_message(message.chat.id, "Error occurred while updating user")
+            return
 
-        recent_posts = search_recent_car_posts({ 'manufacturer': user['manufacturer'], 'model': user['model'], 'year': user['year']})
+        try:
+            recent_posts = search_recent_car_posts({ 'manufacturer': user['manufacturer'], 'model': user['model'], 'year': user['year']})
+        except Exception as e:
+            logger.error(e)
+            bot.send_message(message.chat.id, "Error occurred while fetching recent posts")
+            return
+        
         recent_posts = filter_search_response(recent_posts)
 
+        os.makedirs('user-datasets', exist_ok=True)
         pd.DataFrame(recent_posts).to_csv(f'user-datasets/{message.chat.id}.csv')
     
         message_to_send = ""

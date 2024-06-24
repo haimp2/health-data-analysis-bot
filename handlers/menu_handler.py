@@ -12,14 +12,13 @@ def menu_handler(bot: TeleBot):
     def show_menu(message: Message):
         markup = InlineKeyboardMarkup()
         markup.row_width = 2
-        markup.add(InlineKeyboardButton("Search Car", callback_data="search_car"),
-                InlineKeyboardButton("Posts Statistics", callback_data="statistics"))
+        markup.add(InlineKeyboardButton("Search Car", callback_data="search_car"))
         bot.send_message(message.chat.id, "Choose an option:", reply_markup=markup)
 
 def users_choice_handler(bot: TeleBot):
-    @bot.callback_query_handler(func=lambda call: call.data == 'search_car' or call.data == 'statistics')
+    @bot.callback_query_handler(func=lambda call: call.data == 'search_car')
     def select_first_choice(call: CallbackQuery):
-        user_first_choice = UserFirstChoice.SEARCH_CAR.value if call.message.text == '/search_car' else UserFirstChoice.STATISTICS.value
+        user_first_choice = UserFirstChoice.SEARCH_CAR.value
         add_user(call.message.chat.id, UserState.START.value, user_first_choice)
         
         try:

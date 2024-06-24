@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
 from bidi.algorithm import get_display
+import os
 
 matplotlib.use('Agg')
 
@@ -15,6 +16,7 @@ def set_hebrew_labels(ax, title, xlabel, ylabel):
 
 def save_and_send_plot(bot: TeleBot, chat_id):
     plt.tight_layout()
+    os.makedirs('user-figs', exist_ok=True)
     plt.savefig(f'user-figs/{chat_id}.png')
     bot.send_photo(chat_id, open(f'user-figs/{chat_id}.png', 'rb'))
 

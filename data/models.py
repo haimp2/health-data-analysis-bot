@@ -1,4 +1,4 @@
-from database import Base
+from data.database import Base
 from sqlalchemy import Column, Integer, String
 from enum import Enum
 
@@ -12,7 +12,7 @@ class UserState(Enum):
 
 class UserFirstChoice(Enum):
     SEARCH_CAR = 1
-    PRICE_TRENDS = 2
+    STATISTICS = 2
     CAR_DETAILS = 3
 
 class User(Base):

@@ -7,6 +7,8 @@ name = "pypi"
 pandas = "*"
 telebot = "*"
 sqlalchemy = "*"
+matplotlib = "*"
+python-bidi = "*"
 
 [dev-packages]
 ipykernel = "*"
